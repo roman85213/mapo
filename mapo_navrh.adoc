@@ -1,0 +1,16 @@
+
+= plán projektu
+
+Algoritmus na výpočet trasy
+
+* dostat data z xml
+
+* udělat složitost určitým podmínkám :
+** cesta = složitost 1, zatáčka =  5
+** terén - náročnost průchodu: převýšení
+** okolí trasy - město, les
+
+* vytvořit trasy
+** zjistit čas trasy, body trasy, rychlost chodce
+** zjistit možnou náročnost pro dané parametry
+** vypočítat trasu z bodů s možností mhd
