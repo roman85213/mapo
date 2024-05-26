@@ -1,4 +1,131 @@
 #map {
     height: 97.5vh;
+    z-index: 0;
     /*position: absolute !important;*/
+}
+
+/* .leaflet-control-zoom {  default buttons removal 
+    display: none;
+} */
+
+.side-bar {
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Stay on top */
+    top: 0; /* Stay at the top */
+    right: 0;
+    overflow-x: hidden;
+}
+
+.side-bar button {
+    top: 50vh;
+    font-size: 1.7rem;
+    padding: 30px 10px;
+    background-color: #f1f1f1; 
+    border-radius: 15px 0px 0px 15px;
+    color: black;
+    align-self: center;
+    border: none;
+}
+
+.side-bar button:hover {
+    color: green;
+}
+
+.side-menu {
+    height: 100vh; /* 100% Full-height */
+    width: 0vw; /* 0 width - change this with JavaScript */
+    z-index: 1; /* Stay on top */
+    background-color: #ebebeb; 
+    overflow-x: hidden; /* Disable horizontal scroll */
+    transition: 0.5s; /* 0.5 second transition effect to slide in the sidenav */
+    
+}
+
+.clearButton {
+    padding: 5px;
+    cursor: pointer;
+    font-size: 1.5rem;
+    max-width: 3vw;
+    max-height: 3vh;
+    opacity: 0.5;
+    align-self: flex-start;
+}
+
+.clearButton:hover {
+    opacity: 1;
+}
+
+.route {
+    display: flex;
+    flex-direction: column;
+    padding: 0px 2vw;
+    font-size: 1.1rem;
+    align-items: end;
+    align-self: flex-end;
+    margin-top: 4vh;
+}
+
+.route > :last-child {
+    margin: 10px 0 0 0;
+}
+
+/* HIDE RADIO */
+.route input[type=radio] { 
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+/* IMAGE STYLES */
+.route input[type=radio] + img {
+    max-width: 3vw;
+    cursor: pointer;
+    border-radius: 5px;
+    background-color: white;
+}
+/* CHECKED STYLES */
+.route input[type=radio]:checked + img {
+    outline: 2px solid rgb(67, 67, 161);
+}
+
+
+#fromMarker, #endMarker {
+    max-width: 1.5vw;
+}
+
+.route #from, .route #to {
+    background-color: white;
+    border-radius: 5px;
+    width: 13vw;
+    font-size: 1.1rem;
+    margin-left: 1vw;
+}
+
+.route input[type=submit] {
+    width: 13vw;
+    background-color: rgb(67, 67, 161);
+    color: white;
+    border-radius: 7px;
+    font-size: 1.3rem;
+    align-self: end;
+    margin-left: 0.7vw;
+}
+
+#time {
+    font-size: 1.2rem;
+    align-self: center;
+}
+
+.row {
+    display: flex;
+    flex-direction: row;
+}
+
+.column {
+    display: flex;
+    flex-direction: column;
+}
+
+.space-between {
+    justify-content: space-between;
 }

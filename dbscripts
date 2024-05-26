@@ -1,0 +1,2 @@
+sm2pgsql -O flex --style=/home/roman/Desktop/Skola/projektovani/mapo/src/lua/database.lua --database=postgres -H 127.0.0.1 -U postgres -W /home/roman/Desktop/Skola/projektovani/mapo/pardubicky-latest.osm.pbf -P 5433
+
