@@ -60,8 +60,7 @@ async function generatePaths(parameters) {
             })
         };
         const response = await fetch('http://localhost:8080/', args);
-        const data = await response.json()
-        return data;
+        return await response.json();
     } catch (error) {
         console.log(error);
     }
