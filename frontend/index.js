@@ -16,7 +16,7 @@ let endMarker = L.marker([50.0334524, 15.7773391], {draggable:'true', icon:endIc
 
 async function start() {
     create_map();
-    createForm();
+    handleForm();
     createMenu();
 }
 
@@ -29,19 +29,19 @@ function create_map() {
 }
 
 async function createForm() {
-    
+    form.addEventListener("submit", () => {
+        handleForm();
+    });
 }
-form.addEventListener("submit", () => {
-    handleForm();
-});
+
 
 async function handleForm() {
-    let parameters = new Map();
-    parameters.set("from", startMarker.getLatLng());
-    parameters.set("end", endMarker.getLatLng());
-    parameters.set("time", document.querySelector("#time").value);
-    parameters.set("transportType", document.querySelector('input[name="transportType"]:checked').value);
-
+    let parameters = {
+        "from": startMarker.getLatLng(),
+        "end": endMarker.getLatLng(),
+        "time": document.querySelector("#time").value,
+        "transportType": document.querySelector('input[name="transportType"]:checked').value
+    }
     console.log(parameters);
     let generatedPaths = await generatePaths(parameters);
     console.log(generatedPaths);
