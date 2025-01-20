@@ -1,9 +1,9 @@
 local nodes = osm2pgsql.define_table({
     name = 'nodes',
-    ids = { type = 'any', type_column = 'type', id_column = 'id' },
+    ids = { type = 'any', id_column = 'id', unique = true, primary_key = true},
     columns = {
-        { column = 'geom', type = 'point', not_null = true },
-        { column = 'tags', type = 'jsonb', not_null = true }
+        { column = 'geom', type = 'point', projection = 4326, not_null = true },
+        { column = 'tags', type = 'jsonb' }
     }
 })
                             -- local ways = osm2pgsql.define_table({
@@ -17,12 +17,12 @@ local nodes = osm2pgsql.define_table({
 
 local edges = osm2pgsql.define_table({
     name = 'edges',
-    ids = { type = 'any', type_column = 'type', id_column = 'idw' },
+    ids = { type = 'any', id_column = 'idw' },
     columns = {
         { column = 'id', sql_type = 'serial', create_only = true },
         { column = 'tags', type = 'jsonb', not_null = true },
-        { column = 'n1', type = 'INT', not_null = true },
-        { column = 'n2', type = 'INT', not_null = true },
+        { column = 'n1', type = 'BIGINT', not_null = true },
+        { column = 'n2', type = 'BIGINT', not_null = true },
     }
 })
 function process_nodes(object, geom)
@@ -46,6 +46,8 @@ function process_ways(object)
 end
  
 WAY_BLACKLIST = {"motorway", "trunk"};
+
+NODE_WHITELIST = {"highway"}
  
 local function has_value (tab, val)
     for value in pairs(tab) do

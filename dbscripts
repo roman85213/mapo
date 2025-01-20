@@ -1,2 +1,37 @@
-sm2pgsql -O flex --style=/home/roman/Desktop/Skola/projektovani/mapo/src/lua/database.lua --database=postgres -H 127.0.0.1 -U postgres -W /home/roman/Desktop/Skola/projektovani/mapo/pardubicky-latest.osm.pbf -P 5433
 
+osm2pgsql -O flex --style=/home/roman/Desktop/Skola/projektovani/mapo/src/lua/database.lua --database=postgres -H 127.0.0.1 -U postgres -W /home/roman/Desktop/Skola/projektovani/mapo/pardubicky-latest.osm.pbf -P 5433 --slim
+
+SELECT st_distance(
+       (SELECT geom FROM nodes WHERE nodes.id IN (SELECT n1 FROM edges WHERE edges.id = 2)),
+       (SELECT st_aslatlontext(geom) FROM nodes WHERE nodes.id IN (SELECT n2 FROM edges WHERE edges.id = 55))
+       );
+
+-- TODO přidaání nodes z mezitabulky vytvořené slimem
+INSERT INTO nodes (id, geom, tags)
+(SELECT planet_osm_nodes.id, st_point(planet_osm_nodes.lon::FLOAT/10000000, planet_osm_nodes.lat::float/10000000), tags FROM planet_osm_nodes);
+
+
+SELECT n.n1 FROM
+(
+    SELECT n1 FROM edges
+    UNION
+    SELECT n2 FROM edges
+) as n
+LEFT JOIN nodes ON n.n1 = nodes.id WHERE nodes is null;
+
+-- TODO smazání edges, které vedou mimo pardubický kraj
+DELETE FROM edges WHERE edges.id IN
+(
+    SELECT edges.id FROM edges
+    LEFT JOIN nodes ON edges.n1 = nodes.id WHERE nodes.id IS null
+    UNION
+    SELECT edges.id FROM edges
+    LEFT JOIN nodes ON edges.n2 = nodes.id WHERE nodes.id IS null
+);
+
+-- TODO smazání nodů které nejsou v edges
+CREATE TEMPORARY TABLE tmp AS
+(SELECT edges.n1 FROM nodes LEFT JOIN edges ON nodes.id = edges.n1
+UNION
+SELECT edges.n2 FROM nodes LEFT JOIN edges ON nodes.id = edges.n2);
+DELETE FROM nodes WHERE nodes.id NOT IN (SELECT n1 FROM tmp);

@@ -1,16 +1,38 @@
+= Maturitní projekt Mapo
 
-= plán projektu
+Vytvořte web na kterém bude vykreselna mapa. Na postraním panelu si uživatel bude moct zadat parametry pro vyhledání trasy. Součástí projektu bude zpracování a optimalizace prostorových dat, ze kterých se bude trasa uživatele generovat. Generována bude vlastním algoritmem pro výpočet trasy mezi koncovými body s různými požadavky či omezeními podle uživatelského vstupu(např. výškový profil).
 
-Algoritmus na výpočet trasy
+'''
 
-* dostat data z xml
+* optimalizace prostorových dat
+* vykreslení mapy s možností vstupů uživatele
+* server obsluhující uživatelské interakce
+* implementace algoritmu hledající trasu dle požadavků a omezení
+* dynamické zadávání upřesňujících parametrů trasy
 
-* udělat složitost určitým podmínkám :
-** cesta = složitost 1, zatáčka =  5
-** terén - náročnost průchodu: převýšení
-** okolí trasy - město, les
+'''
 
-* vytvořit trasy
-** zjistit čas trasy, body trasy, rychlost chodce
-** zjistit možnou náročnost pro dané parametry
-** vypočítat trasu z bodů s možností mhd
+== Harmonogram
+
+15.10. - Vytvoření dokumentce, analýza třech webových stránek s obdobnou tématikou
+
+30.10. – Design stránek uložených na serveru školy – vedoucí MS i oponent
+
+15.11. - Návrh projektu – use case a E-R diagram databáze
+
+30.11. - Zpracovat OpenStreetMap data a vyextrahovat z nich pouze užitečné data pro hledání trasy.
+
+15.12. - Server obsluhující uživatelské interakce
+
+15.1. - Vytvoření algoritmu pro hledání trasy podle požadavků a omezení, které zadá uživatel.
+
+30.1. – uložení webových stránek na server školy – kontroluje vedoucí i oponent
+
+15.2. – obsah (minimálně 15 stran dokumentace bez úvodních a závěrečných listů,
+počítáno bez vložených obrázků a ukázek kódu) i formální stránku kontroluje vedoucí MS
+i oponent
+
+28.2. – funkčnost a design webových stránek hodnotí vedoucí MS i oponent
+
+15.3. – vedoucí MS, součástí hodnocení bude předvedení prezentace s ústní obhajobou
+použitých postupů.

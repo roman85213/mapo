@@ -1,0 +1,8 @@
+[package]
+name = "database"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+osmpbf = "0.3"
+postgres = "0.19.9"
