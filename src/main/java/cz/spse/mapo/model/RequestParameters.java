@@ -7,5 +7,6 @@ import lombok.NoArgsConstructor;
 @Data @AllArgsConstructor @NoArgsConstructor
 public class RequestParameters {
     Point from, end;
-    String time, transportType;
+//    String time;
+    String transportType;
 }

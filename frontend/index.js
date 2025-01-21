@@ -2,30 +2,32 @@ let map;
 
 const form = document.querySelector(".route");
 
-let startIcon = L.icon({
-    iconUrl: '../foto/greenmarker.png',
-    iconSize: [30, 45]
-});
-let endIcon = L.icon({
-    iconUrl: '../foto/redmarker.png',
-    iconSize: [30, 45],
-});
-
-let startMarker = L.marker([50.0334524, 15.7773391], {draggable:'true', icon:startIcon});
-let endMarker = L.marker([50.0334524, 15.7773391], {draggable:'true', icon:endIcon});
+let startMarker;
+let endMarker;
 
 async function start() {
     create_map();
-    handleForm();
+    createForm()
     createMenu();
 }
 
 function create_map() {
-    map = L.map('map').setView([50.0334524, 15.7773391], 13);
-    // load a tile layer
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    }).addTo(map);
+    maplibregl.addProtocol("pmtiles", new pmtiles.Protocol().tile);
+    map = new maplibregl.Map({
+        style: 'https://s.vfosnar.cz/vmt/embed_style.json',
+        center: [15.786, 50.038],
+        zoom: 12.631284857541836,
+        container: 'map',
+    })
+
+    startMarker = new maplibregl.Marker({
+        draggable:true,
+        color: "#007f00"
+    });
+    endMarker = new maplibregl.Marker({
+        draggable:true,
+        color: "#c82a29"
+    });
 }
 
 async function createForm() {
@@ -37,9 +39,9 @@ async function createForm() {
 
 async function handleForm() {
     let parameters = {
-        "from": startMarker.getLatLng(),
-        "end": endMarker.getLatLng(),
-        "time": document.querySelector("#time").value,
+        "from": startMarker.getLngLat(),
+        "end": endMarker.getLngLat(),
+        // "time": document.querySelector("#time").value,
         "transportType": document.querySelector('input[name="transportType"]:checked').value
     }
     console.log(parameters);
@@ -85,7 +87,7 @@ function createMenu() {
         let menu = document.querySelector(".side-menu");
         if (menu.style.width == "0vw") {
             document.querySelector(".side-bar button").innerHTML = ">";
-            menu.style.width = "19vw";
+            menu.style.width = "16rem";
         } else {
             document.querySelector(".side-bar button").innerHTML = "<";
             menu.style.width = "0vw";
@@ -97,14 +99,14 @@ function createMenu() {
 
 function createMarkers() {
     document.querySelector("#fromMarker").addEventListener("dragend", (e) => {
-        map.removeLayer(startMarker);
-        startMarker.setLatLng(map.containerPointToLatLng(L.point([e.clientX,e.clientY])))
-        map.addLayer(startMarker);
+        startMarker.remove();
+        startMarker.setLngLat(map.unproject([e.clientX, e.clientY]));
+        startMarker.addTo(map);
     });
     document.querySelector("#endMarker").addEventListener("dragend", (e) => {
-        map.removeLayer(endMarker);
-        endMarker.setLatLng(map.containerPointToLatLng(L.point([e.clientX,e.clientY])))
-        map.addLayer(endMarker);
+        endMarker.remove();
+        endMarker.setLngLat(map.unproject([e.clientX, e.clientY]));
+        endMarker.addTo(map);
     })
 }
 
@@ -112,9 +114,9 @@ function createClearButton() {
     document.querySelector(".clearButton").addEventListener("click", () => {
         document.querySelector("#from").value = "";
         document.querySelector("#to").value = "";
-        document.querySelector("#time").value = "";
-        map.removeLayer(startMarker);
-        map.removeLayer(endMarker);
+        // document.querySelector("#time").value = "";
+        startMarker.remove();
+        endMarker.remove();
     });
 }
 start();
