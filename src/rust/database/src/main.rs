@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap};
 use osmpbf::{ElementReader, Element};
 use postgres::{Client, NoTls};
 
@@ -32,7 +32,7 @@ fn main() {
             return;
         };
         if !WHITELIST.contains(&highway_value) { return; };
-        let node_ids: HashSet<i64> = way.refs().collect();
+        let node_ids: Vec<i64> = way.refs().collect();
 
         let tags_way: HashMap<String, Option<String>> = way
             .tags()

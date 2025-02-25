@@ -8,4 +8,6 @@ import java.util.List;
 @AllArgsConstructor
 public class GenerationResponse {
     private List<GeneratedPath> paths;
+    private String from, to;
+    private Long pathTime, pathLength;
 }
