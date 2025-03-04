@@ -9,5 +9,5 @@ import java.util.List;
 public class GenerationResponse {
     private List<GeneratedPath> paths;
     private String from, to;
-    private Long pathTime, pathLength;
+    private Long pathLength; // pathTime
 }

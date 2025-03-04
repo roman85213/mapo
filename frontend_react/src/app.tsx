@@ -12,10 +12,11 @@ import {useEffect, useRef} from "react";
 import * as maplibregl from "maplibre-gl";
 import {Protocol} from "pmtiles";
 import {Marker, LngLat} from "maplibre-gl";
+import type {FeatureCollection} from 'geojson';
 import { format } from 'react-string-format';
 
 type TransportType = "walk" | "bicycle" | "car" | "bus"
-type WalkSpeed = "tourist" | "walk" | "run"
+type Speed = "tourist" | "walk" | "run" | "bicycle" | "car" | "bus"
 
 interface Point {
     lon: number;
@@ -33,8 +34,9 @@ export function App() {
     const [startPoint, setStartPoint] = useState<LngLat | null>(null);
     const [endPoint, setEndPoint] = useState<LngLat | null>(null)
     const [transportType, setTransportType] = useState<TransportType>("walk")
-    const [walkSpeed, setWalkSpeed] = useState<WalkSpeed>("walk")
+    const [speed, setSpeed] = useState<Speed>("walk")
     const [panelOpen, setPanelOpen] = useState(true)
+    const [path, setPath] = useState<FeatureCollection | null>(null)
     const [pathExists, setPathExists] = useState(false)
     const [pathTimeValue, setPathTimeValue] = useState<number | null>(null)
     const [pathLengthValue, setPathLengthValue] = useState<number | null>(null)
@@ -87,15 +89,7 @@ export function App() {
             return
         }
         handleForm()
-    }, [startPoint, endPoint])
-
-    const firstSpeed = useRef(true);
-    useEffect(() => {
-        if (firstSpeed.current) {
-            firstSpeed.current = false
-            return
-        }
-    }, [walkSpeed]);
+    }, [startPoint, endPoint, transportType])
 
     function placeMarker(e: MouseEvent, marker: Marker, type: String) {
         marker.remove()
@@ -118,7 +112,7 @@ export function App() {
         fillFromTo(generatedPaths.from, generatedPaths.to);
         renderPaths(generatedPaths.paths);
         setPathLengthValue(generatedPaths.pathLength)
-        setPathTimeValue(generatedPaths.pathTime)
+        // setPathTimeValue(generatedPaths.pathTime)
     }
 
     const firstValue = useRef(true);
@@ -128,9 +122,32 @@ export function App() {
             return
         }
         if (pathLengthValue?.valueOf() == null) pathLengthRef.current!.innerText = ""
-        else if (pathLengthValue?.valueOf() < 1000) pathLengthRef.current!.innerText = format('{0} m', pathLengthValue?.valueOf())
-        else pathLengthRef.current!.innerText = format('{0} km',  Math.round((pathLengthValue?.valueOf() / 1000) * 100) / 100)
-    }, [pathLengthValue])
+        else if (pathLengthValue?.valueOf() < 1000) {
+            pathLengthRef.current!.innerText = format('{0} m', pathLengthValue?.valueOf())
+            calculateTime();
+        }
+        else {
+            pathLengthRef.current!.innerText = format('{0} km',  Math.round((pathLengthValue?.valueOf() / 1000) * 100) / 100)
+            calculateTime()
+        }
+    }, [pathLengthValue, transportType, speed])
+
+    function calculateTime() {
+        let km = pathLengthValue?.valueOf() / 1000;
+        switch (speed) {
+            case "tourist":
+                setPathTimeValue(Math.floor((km / 3) * 60));
+                break;
+            case "walk":
+                setPathTimeValue(Math.floor((km / 4) * 60));
+                break;
+            case "run":
+                setPathTimeValue(Math.floor((km / 5) * 60));
+                break;
+            case "car":
+                setPathTimeValue(Math.floor((km / 50) * 60));
+        }
+    }
 
     const firstTime = useRef(true);
     useEffect(() => {
@@ -160,7 +177,7 @@ export function App() {
         })
 
 
-        let linesLibre = {
+        setPath({
             "type": "FeatureCollection",
             "features": linesArray.map(coords => ({
                 "type": "Feature",
@@ -170,21 +187,28 @@ export function App() {
                     "coordinates": coords
                 }
             }))
-        };
+        });
+    }
 
+    const firstPath = useRef(true);
+    useEffect(() => {
+        if (firstPath.current) {
+            firstPath.current = false
+            return
+        }
         if (!map?.getSource('multi-lines')) {
             // Add the multi-line source
 
             map?.addSource('multi-lines', {
                 'type': 'geojson',
-                'data': linesLibre
+                'data': path
             } as any);
         } else {
             map?.removeLayer('multi-line-layer');
             map?.removeSource('multi-lines');
             map?.addSource('multi-lines', {
                 'type': 'geojson',
-                'data': linesLibre
+                'data': path
             } as any);
         }
 
@@ -201,8 +225,7 @@ export function App() {
                 'line-width': 4
             }
         });
-
-    }
+    }, [path]);
 
     async function generatePaths(parameters: any) {
         try {
@@ -229,7 +252,30 @@ export function App() {
         toInputRef.current.value = ""
         startMarker?.remove()
         endMarker?.remove()
+        map?.removeLayer('multi-line-layer');
+        map?.removeSource('multi-lines');
         setPathExists(false)
+    }
+
+    function changeTransportType(type) {
+        switch (type) {
+            case "walk":
+                setTransportType("walk");
+                setSpeed("walk");
+                break
+            case "bicycle":
+                setTransportType("bicycle");
+                setSpeed("bicycle");
+                break
+            case "car":
+                setTransportType("car");
+                setSpeed("car");
+                break
+            case "bus":
+                setTransportType("bus");
+                setSpeed("bus");
+                break
+        }
     }
 
     return (
@@ -247,25 +293,25 @@ export function App() {
                                  className="opacity-70 hover:opacity-100 max-w-12 max-h-12 self-center text-xl cursor-pointer p-2 -ml-2"/>
                             <div className="flex flex-row">
                                 <label>
-                                    <input defaultChecked={true} onClick={() => setTransportType("walk")} type="radio" name="transportType" value="walk" id="walk"
+                                    <input defaultChecked={true} onClick={() => changeTransportType("walk")} type="radio" name="transportType" value="walk" id="walk"
                                            className="absolute opacity-0 w-0 h-0 peer"/>
                                     <img src={walk} alt="Option 1"
                                          className="cursor-pointer bg-white rounded peer-checked:outline-green-600 peer-checked:outline my-2 mx-1 hover:outline-gray-300 hover:outline hover:outline-3"/>
                                 </label>
                                 <label>
-                                    <input onClick={() => setTransportType("bicycle")} type="radio" name="transportType" value="bike"
+                                    <input onClick={() => changeTransportType("bicycle")} type="radio" name="transportType" value="bike"
                                            className="absolute opacity-0 w-0 h-0 peer"/>
                                     <img src={bicycle} alt="Option 2"
                                          className="cursor-pointer bg-white rounded peer-checked:outline-green-600 peer-checked:outline my-2 mx-1 hover:outline-gray-300 hover:outline hover:outline-3"/>
                                 </label>
                                 <label>
-                                    <input onClick={() => setTransportType("car")} type="radio" name="transportType" value="car"
+                                    <input onClick={() => changeTransportType("car")} type="radio" name="transportType" value="car"
                                            className="absolute opacity-0 w-0 h-0 peer"/>
                                     <img src={car} alt="Option 3"
                                          className="cursor-pointer bg-white rounded peer-checked:outline-green-600 peer-checked:outline my-2 mx-1 hover:outline-gray-300 hover:outline hover:outline-3"/>
                                 </label>
                                 <label>
-                                    <input onClick={() => setTransportType("bus")} type="radio" name="transportType" value="bus"
+                                    <input onClick={() => changeTransportType("bus")} type="radio" name="transportType" value="bus"
                                            className="absolute opacity-0 w-0 h-0 peer"/>
                                     <img src={bus} alt="Option 4"
                                          className="cursor-pointer bg-white rounded peer-checked:outline-green-600 peer-checked:outline my-2 mx-1 hover:outline-gray-300 hover:outline hover:outline-3"/>
@@ -300,21 +346,21 @@ export function App() {
                             {transportType == "walk" && (
                                 <div className="flex flex-row">
                                     <label className="w-12 px-1">
-                                        <input onClick={() => setWalkSpeed("tourist")} type="radio" name="walkSpeed"
+                                        <input onClick={() => setSpeed("tourist")} type="radio" name="walkSpeed"
                                                value="tourist"
                                                className="absolute opacity-0 w-0 h-0 peer"/>
                                         <img src={tourist} alt="Speed 1"
                                              className="cursor-pointer bg-white rounded peer-checked:outline-green-600 hover:outline-gray-300 outline outline-gray-100 my-2"/>
                                     </label>
                                     <label className="w-12 px-1">
-                                        <input onClick={() => setWalkSpeed("walk")} type="radio" name="walkSpeed"
+                                        <input defaultChecked={true} onClick={() => setSpeed("walk")} type="radio" name="walkSpeed"
                                                value="walk"
                                                className="absolute opacity-0 w-0 h-0 peer"/>
                                         <img src={walk} alt="Speed 2"
                                              className="cursor-pointer bg-white rounded peer-checked:outline-green-600 hover:outline-gray-300 outline outline-gray-100 my-2"/>
                                     </label>
                                     <label className="w-12 px-1">
-                                        <input onClick={() => setWalkSpeed("run")} type="radio" name="walkSpeed"
+                                        <input onClick={() => setSpeed("run")} type="radio" name="walkSpeed"
                                                value="run"
                                                className="absolute opacity-0 w-0 h-0 peer"/>
                                         <img src={run} alt="Speed 3"

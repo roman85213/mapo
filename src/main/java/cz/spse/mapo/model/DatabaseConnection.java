@@ -32,9 +32,36 @@ public class DatabaseConnection {
         String sql = "SELECT id FROM nodes ORDER BY ST_Distance(geom, ST_SetSRID(ST_MakePoint(?, ?), 4326)) LIMIT 1";
         return jdbcTemplate.query(sql, idNodeMapper, lon, lat).get(0);
     }
+    public Double getNodeId(double lon, double lat, String type) {
+//        String sql = switch (type) {
+//            case "walk" ->
+//                    "SELECT id FROM nodes ORDER BY ST_Distance(geom, ST_SetSRID(ST_MakePoint(?, ?), 4326)) LIMIT 1";
+//            case "car" ->
+//                    "SELECT id FROM nodes JOIN edges ONORDER BY ST_Distance(geom, ST_SetSRID(ST_MakePoint(?, ?), 4326)) LIMIT 1";
+//            default -> "";
+//        };
+        String sql = "SELECT id FROM nodes ORDER BY ST_Distance(geom, ST_SetSRID(ST_MakePoint(?, ?), 4326)) LIMIT 300";
+        List<Double> ids = jdbcTemplate.query(sql, idNodeMapper, lon, lat);
 
-    private final RowMapper<Double> idNodeMapper = (rs, rowNum) ->
-            rs.getDouble("id");
+        switch (type) {
+            case "walk":
+                return ids.get(0);
+            case "car":
+                String inSql = "SELECT nodes.id FROM nodes JOIN edges ON edges.tags -> 'highway' = ANY(ARRAY['residential', 'primary', 'secondary']) WHERE nodes.id = ?";
+                for (Double id : ids) {
+                    Double result = jdbcTemplate.query(inSql, idNodeMapper, id).get(0);
+                    if (result != -1)
+                        return result;
+                }
+        }
+        throw new RuntimeException();
+    }
+
+    private final RowMapper<Double> idNodeMapper = (rs, rowNum) -> {
+        if (!rs.next()) return -1D;
+        return rs.getDouble("id");
+    };
+
 
     public String getNodesStreetName(double id) {
         String sql = "SELECT edges.tags->'name' as street FROM edges JOIN nodes n ON n.id = edges.source WHERE edges.tags->'name' IS NOT NULL AND n.id = ?";
@@ -53,11 +80,16 @@ public class DatabaseConnection {
     private final RowMapper<Double> idRowMapper = (rs, rowNum) ->
         rs.getDouble("id");
 
-    public List<GeneratedPath> generatePaths(Point pointFrom, Point pointTo) {
-        double fromId = getNodeId(pointFrom.lng, pointFrom.lat);
-        double toId = getNodeId(pointTo.lng, pointTo.lat);
+    public List<GeneratedPath> generatePaths(Point pointFrom, Point pointTo, String type) {
+        double fromId = getNodeId(pointFrom.lng, pointFrom.lat, type);
+        double toId = getNodeId(pointTo.lng, pointTo.lat, type);
         List<GeneratedPath> paths = new ArrayList<>();
-        String edgeSql = "SELECT id, source, target, cost FROM edges";
+        String edgeSql = switch (type) {
+            case "walk" -> "SELECT id, source, target, cost FROM edges";
+            case "car" -> "SELECT id, source, target, cost FROM edges WHERE edges.tags -> 'highway' = ANY(ARRAY['residential', 'primary', 'secondary', 'service'])";
+            default -> "";
+        };
+        if (edgeSql.isEmpty()) throw new RuntimeException();
         String sql = "SELECT * from pgr_dijkstra(?, ?, ?, false)";
         paths.add(new GeneratedPath(jdbcTemplate.query(sql, generatedPathMapper, edgeSql, (long) fromId, (long) toId)));
         return paths;

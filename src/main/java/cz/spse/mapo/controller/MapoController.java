@@ -31,20 +31,16 @@ public class MapoController {
         String from = getName(pointFrom);
         Point pointTo = generationRequest.getParameters().getEnd();
         String to = getName(pointTo);
-        List<GeneratedPath> paths = getPaths(pointFrom, pointTo);
+        String type = generationRequest.getParameters().getTransportType();
+        List<GeneratedPath> paths = getPaths(pointFrom, pointTo, type);
+//        int time = generationRequest.getParameters().getTime();
 
-        int speed = 4; //generationRequest.getParameters().getSpeed();
         long length = 0L;
-        long time = 0L;
         if (paths.size() == 1) {
             length = getLength(paths.get(0));
-            time = getTime(length, speed);
         }
 
-//        GeneratedPath gp = new GeneratedPath(List.of(new Node(50.04272, 15.80979), new Node(50.04310, 15.80923), new Node(50.04466, 15.80713), new Node(50.04513,15.80789)));
-//        GeneratedPath gp1 = new GeneratedPath(List.of(new Node(50.04402,15.80753), new Node(50.04442,15.80824), new Node(50.04393,15.80905)));
-//        return ResponseEntity.ok(new GenerationResponse(List.of(gp), from, to));
-        return ResponseEntity.ok(new GenerationResponse(paths, from, to, time, length));
+        return ResponseEntity.ok(new GenerationResponse(paths, from, to, length));
     }
 
     public String getName(Point point) {
@@ -57,8 +53,8 @@ public class MapoController {
         return String.format("x=%.5f, y=%.5f", point.getLng(), point.getLat());
     }
 
-    private List<GeneratedPath> getPaths(Point pointFrom, Point pointTo) {
-        return nodeRepository.generatePaths(pointFrom, pointTo);
+    private List<GeneratedPath> getPaths(Point pointFrom, Point pointTo, String type) {
+        return nodeRepository.generatePaths(pointFrom, pointTo, type);
     }
 
     public Long getLength(GeneratedPath path) {
@@ -74,10 +70,5 @@ public class MapoController {
         sql.deleteCharAt(sql.length() - 1);
         sql.append(")");
         return nodeRepository.getPathLength(sql.toString());
-    }
-
-    private Long getTime(long length, int speed) {
-        double km = (double)length / 1000;
-        return (long) ((km / speed) * 60);
     }
 }

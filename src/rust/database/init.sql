@@ -48,9 +48,11 @@ SELECT ST_X(ST_Centroid(ST_Transform(geom, 4326))) AS long, ST_Y(ST_Centroid(ST_
 
 SELECT id FROM nodes ORDER BY ST_Distance(geom, ST_SetSRID(ST_MakePoint(15.80278, 50.04346), 4326)) LIMIT 1;
 
-select * from edges where edges.tags -> 'highway' = 'residential' and edges.tags -> 'name' = 'Bartoňova';
+SELECT nodes.id FROM nodes JOIN edges ON edges.tags -> 'highway' = ANY(ARRAY['residential', 'primary', 'secondary']) WHERE nodes.id = 9654380568;
 
-SELECT * from pgr_dijkstra('SELECT id, source, target, cost FROM edges', 568467307, 568467323, false);
+select * from edges where edges.tags -> 'highway' = ANY(ARRAY['residential', 'primary', 'secondary']);
+
+SELECT * from pgr_dijkstra('SELECT id, source, target, cost FROM edges WHERE edges.tags -> ''highway'' = ANY(ARRAY[''residential'', ''primary'', ''secondary'', ''service''])', 6297607131, 568455342, false);
 
 SELECT ST_Length(ST_GeogFromText('SRID=4326;LINESTRING(15.8111241 50.0478304,15.811003200000002 50.0477633,15.810957900000002 50.0477391)'));
 
