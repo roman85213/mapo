@@ -12,7 +12,7 @@ struct MyNode {
 const WHITELIST: [&str; 10] = ["residential", "crossing", "service", "footway", "cycleway", "primary", "secondary", "track", "tertiary", "motorway"];
 
 fn main() {
-    let mut client = Client::connect("postgresql://postgres:password@localhost:5433/mapo", NoTls).unwrap();
+    let mut client = Client::connect("postgresql://postgres:password@localhost:5435/mapo", NoTls).unwrap();
 
     let file_path = "../../../pardubice.osm.pbf";
 
