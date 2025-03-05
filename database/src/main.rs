@@ -14,7 +14,7 @@ const WHITELIST: [&str; 10] = ["residential", "crossing", "service", "footway", 
 fn main() {
     let mut client = Client::connect("postgresql://postgres:password@localhost:5435/mapo", NoTls).unwrap();
 
-    let file_path = "../../../pardubice.osm.pbf";
+    let file_path = "../pardubice.osm.pbf";
 
     let node_reader = ElementReader::from_path(file_path).expect("Failed to reopen PBF file");
     let mut nodes= BTreeMap::new();
