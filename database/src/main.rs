@@ -13,7 +13,7 @@ struct MyNode {
 const WHITELIST: [&str; 10] = ["residential", "crossing", "service", "footway", "cycleway", "primary", "secondary", "track", "tertiary", "motorway"];
 
 fn main() {
-    let mut client = Client::connect(env::var("connection_string").unwrap().as_str(), NoTls).unwrap();
+    let mut client = Client::connect(env::var("CONNECTION").unwrap().as_str(), NoTls).unwrap();
 
     let file_path = "../pardubice.osm.pbf";
 
