@@ -133,7 +133,8 @@ export function App() {
     }, [pathLengthValue, transportType, speed])
 
     function calculateTime() {
-        let km = pathLengthValue?.valueOf() / 1000;
+        if (pathLengthValue == null) return
+        let km = pathLengthValue.valueOf() / 1000;
         switch (speed) {
             case "tourist":
                 setPathTimeValue(Math.floor((km / 3) * 60));
@@ -257,7 +258,7 @@ export function App() {
         setPathExists(false)
     }
 
-    function changeTransportType(type) {
+    function changeTransportType(type: TransportType) {
         switch (type) {
             case "walk":
                 setTransportType("walk");
