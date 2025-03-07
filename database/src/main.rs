@@ -15,7 +15,16 @@ const WHITELIST: [&str; 10] = ["residential", "crossing", "service", "footway", 
 fn main() {
     let mut client = Client::connect(env::var("CONNECTION").unwrap().as_str(), NoTls).unwrap();
 
-    let file_path = env::var("FILEPATH").unwrap().as_str();
+
+    let file_path = if let Some(fp) = env::var("FILEPATH") {
+        fp.as_str().to_owned()
+    } else {
+        Command::new("curl")
+            .args(["-o", "/region.pbf", env::var("REGION_URL")])
+            .output()
+            .expect("failed to execute process");
+        "/region.pbf".to_owned()
+    };
 
     let node_reader = ElementReader::from_path(file_path).expect("Failed to reopen PBF file");
     let mut nodes= BTreeMap::new();
