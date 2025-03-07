@@ -1,5 +1,6 @@
 use std::collections::{BTreeMap, HashMap};
 use std::env;
+use std::process::Command;
 use osmpbf::{ElementReader, Element};
 use postgres::{Client, NoTls};
 
@@ -26,7 +27,7 @@ fn main() {
         "/region.pbf".to_owned()
     };
 
-    let node_reader = ElementReader::from_path(file_path).expect("Failed to reopen PBF file");
+    let node_reader = ElementReader::from_path(&file_path).expect("Failed to reopen PBF file");
     let mut nodes= BTreeMap::new();
     node_reader.for_each(|element| {
         let Element::DenseNode(node) = element else { return; };
@@ -34,7 +35,7 @@ fn main() {
         nodes.insert(my_node.id, my_node);
     }).unwrap();
     
-    let reader = ElementReader::from_path(file_path).expect("Failed to open PBF file");
+    let reader = ElementReader::from_path(&file_path).expect("Failed to open PBF file");
     
     reader.for_each(|element| {
         let Element::Way(way) = element else { return; };
