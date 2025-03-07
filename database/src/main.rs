@@ -16,11 +16,11 @@ fn main() {
     let mut client = Client::connect(env::var("CONNECTION").unwrap().as_str(), NoTls).unwrap();
 
 
-    let file_path = if let Some(fp) = env::var("FILEPATH") {
+    let file_path = if let Ok(fp) = env::var("FILEPATH") {
         fp.as_str().to_owned()
     } else {
         Command::new("curl")
-            .args(["-o", "/region.pbf", env::var("REGION_URL")])
+            .args(["-o", "/region.pbf", env::var("REGION_URL").unwrap().as_str()])
             .output()
             .expect("failed to execute process");
         "/region.pbf".to_owned()
