@@ -28,18 +28,11 @@ public class DatabaseConnection {
                     rs.getDouble("long")
             );
 
-    public Double getNodeId(double lon, double lat) {
-        String sql = "SELECT id FROM nodes ORDER BY ST_Distance(geom, ST_SetSRID(ST_MakePoint(?, ?), 4326)) LIMIT 1";
-        return jdbcTemplate.query(sql, idNodeMapper, lon, lat).get(0);
-    }
+//    public Double getNodeId(double lon, double lat) {
+//        String sql = "SELECT id FROM nodes ORDER BY ST_Distance(geom, ST_SetSRID(ST_MakePoint(?, ?), 4326)) LIMIT 1";
+//        return jdbcTemplate.query(sql, idNodeMapper, lon, lat).get(0);
+//    }
     public Double getNodeId(double lon, double lat, String type) {
-//        String sql = switch (type) {
-//            case "walk" ->
-//                    "SELECT id FROM nodes ORDER BY ST_Distance(geom, ST_SetSRID(ST_MakePoint(?, ?), 4326)) LIMIT 1";
-//            case "car" ->
-//                    "SELECT id FROM nodes JOIN edges ONORDER BY ST_Distance(geom, ST_SetSRID(ST_MakePoint(?, ?), 4326)) LIMIT 1";
-//            default -> "";
-//        };
         String sql = "SELECT id FROM nodes ORDER BY ST_Distance(geom, ST_SetSRID(ST_MakePoint(?, ?), 4326)) LIMIT 300";
         List<Double> ids = jdbcTemplate.query(sql, idNodeMapper, lon, lat);
 
