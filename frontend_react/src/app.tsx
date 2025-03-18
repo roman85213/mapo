@@ -11,15 +11,20 @@ import run from "./foto/icons8-run-50.png"
 import {RefObject, useEffect, useRef} from "react";
 import * as maplibregl from "maplibre-gl";
 import {Protocol} from "pmtiles";
-import {Marker, LngLat, Source} from "maplibre-gl";
+import {Marker, LngLat} from "maplibre-gl";
 import type {FeatureCollection} from 'geojson';
 import { format } from 'react-string-format';
 
 type TransportType = "walk" | "bicycle" | "car" | "bus"
 type Speed = "tourist" | "walk" | "run" | "bicycle" | "car" | "bus"
 
+interface Point {
+    lon: number,
+    lat: number
+}
+
 interface Path {
-    points: LngLat[];
+    points: Point[];
 }
 
 export function App() {
@@ -250,7 +255,7 @@ export function App() {
                 }
             });
         } else {
-            map?.getSource("multi-lines").setData(path);
+            (map?.getSource("multi-lines") as any).setData(path);
         }
     }, [path]);
 
