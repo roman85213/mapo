@@ -1,4 +1,4 @@
-import { useState } from 'preact/hooks'
+import {MutableRef, useState} from 'preact/hooks'
 import greenMarker from "./foto/greenmarker.png"
 import redMarker from "./foto/redmarker.png"
 import walk from "./foto/icons8-walking-50.png"
@@ -8,23 +8,18 @@ import bus from "./foto/icons8-bus-50.png"
 import clearButton from "./foto/icons8-x-50.png"
 import tourist from "./foto/icons8-tourist-50.png"
 import run from "./foto/icons8-run-50.png"
-import {useEffect, useRef} from "react";
+import {RefObject, useEffect, useRef} from "react";
 import * as maplibregl from "maplibre-gl";
 import {Protocol} from "pmtiles";
-import {Marker, LngLat} from "maplibre-gl";
+import {Marker, LngLat, Source} from "maplibre-gl";
 import type {FeatureCollection} from 'geojson';
 import { format } from 'react-string-format';
 
 type TransportType = "walk" | "bicycle" | "car" | "bus"
 type Speed = "tourist" | "walk" | "run" | "bicycle" | "car" | "bus"
 
-interface Point {
-    lon: number;
-    lat: number;
-}
-
 interface Path {
-    points: Point[];
+    points: LngLat[];
 }
 
 export function App() {
@@ -88,8 +83,43 @@ export function App() {
             firstEnd.current = false
             return
         }
+        if (startPoint == null || endPoint == null)
+            return;
         handleForm()
     }, [startPoint, endPoint, transportType])
+
+    useEffect(() => {
+        if (startPoint == null) {startMarker?.remove()}
+        else {
+            startMarker?.setLngLat(startPoint); startMarker?.addTo(map!);
+            getName(startPoint, fromInputRef)
+        }
+    }, [startPoint]);
+    useEffect(() => {
+        if (endPoint == null) {endMarker?.remove()}
+        else {
+            endMarker?.setLngLat(endPoint); endMarker?.addTo(map!);
+            getName(endPoint, toInputRef)
+        }
+    }, [endPoint]);
+
+    async function getName(point: LngLat, inputRef: RefObject<HTMLInputElement>) {
+        try {
+            let args = {
+                method: 'POST', // or 'PUT'
+                headers: {
+                    'Access-Control-Allow-Origin':'*',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(point)
+            };
+            let address = import.meta.env.VITE_BACKEND == undefined ? 'http://localhost:8080/pointName' : import.meta.env.VITE_BACKEND + 'pointName/';
+            const response = await fetch(address, args);
+            inputRef.current!.value = await response.text()
+        } catch (error) {
+            console.log(error);
+        }
+    }
 
     function placeMarker(e: MouseEvent, marker: Marker, type: String) {
         marker.remove()
@@ -99,9 +129,10 @@ export function App() {
     }
 
     async function handleForm() {
+        if (startPoint == null || endPoint == null) return
         let pathParameters = {
-            "from": startPoint ? startPoint : null,
-            "end": endPoint ? endPoint : null,
+            "from": startPoint,
+            "end": endPoint,
             // "time": document.querySelector("#time").value,
             "transportType": transportType
         }
@@ -145,8 +176,15 @@ export function App() {
             case "run":
                 setPathTimeValue(Math.floor((km / 5) * 60));
                 break;
+            case "bicycle":
+                setPathTimeValue(Math.floor((km / 15) * 60));
+                break
             case "car":
                 setPathTimeValue(Math.floor((km / 50) * 60));
+                break
+            case "bus":
+                setPathTimeValue(Math.floor((km / 40) * 60));
+                break
         }
     }
 
@@ -177,7 +215,6 @@ export function App() {
             linesArray.push(path.points.map(point => [point.lon, point.lat]));
         })
 
-
         setPath({
             "type": "FeatureCollection",
             "features": linesArray.map(coords => ({
@@ -191,41 +228,30 @@ export function App() {
         });
     }
 
-    const firstPath = useRef(true);
     useEffect(() => {
-        if (firstPath.current) {
-            firstPath.current = false
-            return
-        }
         if (!map?.getSource('multi-lines')) {
             // Add the multi-line source
-
             map?.addSource('multi-lines', {
                 'type': 'geojson',
                 'data': path
             } as any);
+
+            map?.addLayer({
+                'id': 'multi-line-layer',
+                'type': 'line',
+                'source': 'multi-lines',
+                'layout': {
+                    'line-join': 'round',
+                    'line-cap': 'round'
+                },
+                'paint': {
+                    'line-color': ['get', 'color'], // You can dynamically set colors if needed
+                    'line-width': 4
+                }
+            });
         } else {
-            map?.removeLayer('multi-line-layer');
-            map?.removeSource('multi-lines');
-            map?.addSource('multi-lines', {
-                'type': 'geojson',
-                'data': path
-            } as any);
+            map?.getSource("multi-lines").setData(path);
         }
-
-        map?.addLayer({
-            'id': 'multi-line-layer',
-            'type': 'line',
-            'source': 'multi-lines',
-            'layout': {
-                'line-join': 'round',
-                'line-cap': 'round'
-            },
-            'paint': {
-                'line-color': ['get', 'color'], // You can dynamically set colors if needed
-                'line-width': 4
-            }
-        });
     }, [path]);
 
     async function generatePaths(parameters: any) {
@@ -255,6 +281,8 @@ export function App() {
         endMarker?.remove()
         map?.removeLayer('multi-line-layer');
         map?.removeSource('multi-lines');
+        setStartPoint(null)
+        setEndPoint(null)
         setPathExists(false)
     }
 
@@ -276,6 +304,36 @@ export function App() {
                 setTransportType("bus");
                 setSpeed("bus");
                 break
+        }
+    }
+
+    async function makeMarkerByName(inputRef: MutableRef<HTMLInputElement | null>) {
+        let name = inputRef.current?.value
+        try {
+            let args = {
+                method: 'POST', // or 'PUT'
+                headers: {
+                    'Access-Control-Allow-Origin':'*',
+                    'Content-Type': 'application/json',
+                },
+                body: name
+            };
+            let address = import.meta.env.VITE_BACKEND == undefined ? 'http://localhost:8080/streetName' : import.meta.env.VITE_BACKEND + 'streetName/';
+            const response = await fetch(address, args); //
+            let node = await response.json();
+            let lnglat = new LngLat(node.lon, node.lat)
+            switch (inputRef.current?.id) {
+                case "from":
+                    setStartPoint(lnglat)
+                    startMarker?.setLngLat(lnglat)
+                    break
+                case "to":
+                    setEndPoint(lnglat)
+                    endMarker?.setLngLat(lnglat)
+                    break
+            }
+        } catch (error) {
+            console.log(error);
         }
     }
 
@@ -322,13 +380,13 @@ export function App() {
                         <div className="flex flex-row my-3">
                             <img onDragEnd={(e) => placeMarker(e, startMarker!, "s")} src={greenMarker} alt="" srcSet="" id="startMarker"
                                  className="ml-4 max-w-9 h-auto duration-200 cursor-pointer hover:duration-200 hover:scale-125"/>
-                            <input ref={fromInputRef} type="text" name="from" id="from" placeholder="From"
+                            <input onBlur={() => makeMarkerByName(fromInputRef)} ref={fromInputRef} type="text" name="from" id="from" placeholder="From"
                                    className="bg-white rounded w-60 max-h-12 text-l my-1 ml-2 px-3 outline outline-2 outline-gray-300 hover:outline-gray-400 focus:outline-green-600"/>
                         </div>
                         <div className="flex flex-row">
                             <img onDragEnd={(e) => placeMarker(e, endMarker!, "e")} src={redMarker} alt="" srcSet="" id="toMarker"
                                  className="ml-4 max-w-9 h-auto duration-200 cursor-pointer hover:duration-200 hover:scale-125"/>
-                            <input ref={toInputRef} type="text" name="to" id="to" placeholder="To"
+                            <input onBlur={() => makeMarkerByName(toInputRef)} ref={toInputRef} type="text" name="to" id="to" placeholder="To"
                                    className="bg-white rounded w-60 max-h-12 text-l my-1 ml-2 px-3 outline outline-2 outline-gray-300 hover:outline-gray-400 focus:outline-green-600"/>
                         </div>
                         <div className="flex flex-row justify-center">

@@ -37,9 +37,9 @@ public class DatabaseConnection {
         List<Double> ids = jdbcTemplate.query(sql, idNodeMapper, lon, lat);
 
         switch (type) {
-            case "walk":
+            case "walk", "bicycle":
                 return ids.get(0);
-            case "car":
+            case "car", "bus":
                 String inSql = "SELECT nodes.id FROM nodes JOIN edges ON edges.tags -> 'highway' = ANY(ARRAY['residential', 'primary', 'secondary']) WHERE nodes.id = ?";
                 for (Double id : ids) {
                     Double result = jdbcTemplate.query(inSql, idNodeMapper, id).get(0);
@@ -65,6 +65,13 @@ public class DatabaseConnection {
     private final RowMapper<String> streetRowMapper = (rs, rowNum) ->
             rs.getString("street");
 
+    public Node getNodeByStreetName(String name) {
+        String sql = "SELECT nodes.id, ST_X(ST_Centroid(ST_Transform(geom, 4326))) AS long, ST_Y(ST_Centroid(ST_Transform(geom, 4326))) AS lat FROM nodes JOIN edges ON edges.source = nodes.id AND edges.tags->'name' = ?";
+        List<Node> result = jdbcTemplate.query(sql, nodeRowMapper, name);
+        int len = result.size();
+        return result.isEmpty() ? null : result.get(len / 2);
+    }
+
     public List<Double> getNodesByLonLat(double lon, double lat) {
         String sql = "SELECT id FROM nodes ORDER BY ST_Distance(geom, ST_SetSRID(ST_MakePoint(?, ?), 4326)) LIMIT 5";
         return jdbcTemplate.query(sql, idRowMapper, lon, lat);
@@ -78,8 +85,8 @@ public class DatabaseConnection {
         double toId = getNodeId(pointTo.lng, pointTo.lat, type);
         List<GeneratedPath> paths = new ArrayList<>();
         String edgeSql = switch (type) {
-            case "walk" -> "SELECT id, source, target, cost FROM edges";
-            case "car" -> "SELECT id, source, target, cost FROM edges WHERE edges.tags -> 'highway' = ANY(ARRAY['residential', 'primary', 'secondary', 'service'])";
+            case "walk", "bicycle" -> "SELECT id, source, target, cost FROM edges";
+            case "car", "bus" -> "SELECT id, source, target, cost FROM edges WHERE edges.tags -> 'highway' = ANY(ARRAY['residential', 'primary', 'secondary', 'service', 'tertiary', 'motorway'])";
             default -> "";
         };
         if (edgeSql.isEmpty()) throw new RuntimeException();

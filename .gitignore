@@ -38,3 +38,4 @@ out/
 
 *.osm
 *.pbf
+connection_string

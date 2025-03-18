@@ -56,5 +56,7 @@ SELECT * from pgr_dijkstra('SELECT id, source, target, cost FROM edges WHERE edg
 
 SELECT ST_Length(ST_GeogFromText('SRID=4326;LINESTRING(15.8111241 50.0478304,15.811003200000002 50.0477633,15.810957900000002 50.0477391)'));
 
+SELECT nodes.id, ST_X(ST_Centroid(ST_Transform(geom, 4326))) AS long, ST_Y(ST_Centroid(ST_Transform(geom, 4326))) AS lat FROM nodes JOIN edges ON edges.source = nodes.id AND edges.tags->'name' = 'U Lípy';
+
 SELECT * FROM edges WHERE source = 9357078411 OR target = 9357078411;
 SELECT * FROM edges WHERE target = 288345903;

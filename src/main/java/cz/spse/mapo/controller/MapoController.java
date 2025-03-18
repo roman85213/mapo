@@ -11,6 +11,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 import java.util.Objects;
@@ -42,6 +43,7 @@ public class MapoController {
     }
 
     public String getName(Point point) {
+        if (point.getLng() == null || point.getLat() == null) return "wroong";
         List<Double> nodes = nodeRepository.getNodesByLonLat(point.getLng(), point.getLat());
         String name;
         for (Double node : nodes) {
@@ -68,5 +70,18 @@ public class MapoController {
         sql.deleteCharAt(sql.length() - 1);
         sql.append(")");
         return nodeRepository.getPathLength(sql.toString());
+    }
+
+    @CrossOrigin
+    @PostMapping("/streetName")
+    public ResponseEntity<Node> getNodeByStreetName(@RequestBody String name) {
+        Node res = nodeRepository.getNodeByStreetName(name);
+        return ResponseEntity.ok(res);
+    }
+
+    @CrossOrigin
+    @PostMapping("/pointName")
+    public ResponseEntity<String> getNodeByPoint(@RequestBody Point point) {
+        return ResponseEntity.ok(getName(point));
     }
 }
