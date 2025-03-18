@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Controller
+@CrossOrigin
 public class MapoController {
     private final DatabaseConnection nodeRepository;
 
